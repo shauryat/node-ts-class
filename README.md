@@ -2,7 +2,6 @@
 install node modules
 ```
  STEP 1: yarn OR npm install
- 
 ```
 compiles typescript
 ```
