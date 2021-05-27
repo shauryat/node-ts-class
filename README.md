@@ -5,9 +5,9 @@ install node modules
 ```
 compiles typescript
 ```
- STEP 2: yarn watch or npm run watch
+ STEP 2: yarn watch OR npm run watch
 ```
 run the server
 ```
- STEP 3: yarn dev or npm run dev
+ STEP 3: yarn dev OR npm run dev
 ```
