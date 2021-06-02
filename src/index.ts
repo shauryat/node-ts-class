@@ -1,10 +1,23 @@
 import express from 'express';
-import calcRoute from './routes';
-const app = express();
+import mongoose from 'mongoose';
+import userRoutes from './routes/user.routes';
+import blogRoutes from './routes/blog.routes';
 
+const app = express();
 app.use(express.json());
 
-app.use( "/calc" , calcRoute);
-app.listen(5000 , () => {
+mongoose.connect("mongodb://127.0.0.1:27017/msit", {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+    useFindAndModify:false
+}).then(() => console.log("DB connected 👍")).catch((error) => {
+    console.log('error occured', error);
+});
+
+app.use("/blog", blogRoutes);
+app.use("/user", userRoutes);
+
+
+app.listen(5000, () => {
     console.log('server started on port 5000');
 })
