@@ -1,10 +1,12 @@
 import { Request, Response } from 'express';
+import Comment from '../models/comment.model';
 import Blog from '../models/blog.model';
 
 const createBlog = async (req: Request, res: Response) => {
-    const { userId } = req.params;
+    // @ts-ignore
+    const { id } = req.user; // extracting user id from JWT Token
     const { blog } = req.body;
-    blog.user = userId;
+    blog.user = id;
     const createdBlog = new Blog(blog);
     await createdBlog.save();
     res.json({ blog: createdBlog });
@@ -16,35 +18,59 @@ const ReadAllBlog = async (req: Request, res: Response) => {
 }
 
 const ReadOneBlog = async (req: Request, res: Response) => {
-    const { id } = req.params;
-    const specificBlog = await Blog.findById(id);
+    const { blogId } = req.params;
+    const specificBlog = await Blog.findById(blogId);
     res.json({ blogs: specificBlog });
 }
 
 const UpdateBlog = async (req: Request, res: Response) => {
-    const { id } = req.params;
+    const { blogId } = req.params;
+    // @ts-ignore
+    const owner = req.user.id;
     const { blog } = req.body;
-    const updatedBlog = await Blog.findByIdAndUpdate(id, blog, { new: true });
-    res.json({ blogs: updatedBlog });
+    const blogCheck = await Blog.findById(blogId);
+    console.log(owner);
+    console.log(blogCheck?.user._id);
+    if (blogCheck?.user._id == owner) {
+        const updatedBlog = await Blog.findByIdAndUpdate(blogId, blog, { new: true });
+        res.json({ blogs: updatedBlog });
+    } else {
+        res.json({ msg: "you are not the owoner" })
+    }
 }
 
 const DeleteBlog = async (req: Request, res: Response) => {
-    const { id } = req.params;
-    const deletedBlog = await Blog.findByIdAndDelete(id);
-    res.json({ blogs: deletedBlog });
+    const { blogId } = req.params;
+    // @ts-ignore
+    const owner = req.user.id;
+    const blogCheck = await Blog.findById(blogId);
+    if (blogCheck?.user._id == owner) {
+        const DeleteddBlog = await Blog.findByIdAndDelete(blogId);
+        res.json({ blogs: DeleteddBlog });
+    } else {
+        res.json({ msg: "you are not the owoner" })
+    }
 }
 
 const createComment = async (req: Request, res: Response) => {
+    // @ts-ignore
+    const { id } = req.user; // extracting user id from JWT Token
     const { comment } = req.body;
-    const { userId, blogId } = req.params;
-    comment.user = userId;
-    const result = await Blog.findByIdAndUpdate(
-        blogId, { $push: { comments: comment } },
-        { new: true })
-        .populate('comment.user', '_id name') // inserting user who created comment
-        .exec()
+    const { blogId } = req.params;
+    comment.user = id;
+    comment.blog = blogId;
+    const newComment = new Comment(comment);
+    await newComment.save();
 
-    res.json({ blog: result });
+    const commentId = newComment._id;
+
+    const result = await Blog.findByIdAndUpdate(
+        blogId, { $push: { comments: commentId } },
+        { new: true })
+    // .populate('comment.text', '_id name') // inserting user who created comment
+    // .exec()
+
+    res.json({ blog: result, comment: newComment });
 }
 
 export default { createBlog, ReadAllBlog, ReadOneBlog, UpdateBlog, DeleteBlog, createComment };
